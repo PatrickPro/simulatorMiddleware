@@ -16,6 +16,12 @@ var ftp = new JSFtp({
     pass: "urbaninformatics2016"
 });
 
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};
+
+
 var ws = null;
 var sockets = [];
 var webSockets = [];
@@ -30,6 +36,9 @@ var os = require('os');
 var ifaces = os.networkInterfaces();
 
 var localIP = "";
+
+var filename = "log_"+ new Date().toDateString() + "_" + new Date().getTime();
+filename = filename.replaceAll(" ", "_");
 
 
 'use strict';
@@ -71,6 +80,9 @@ Object.keys(ifaces).forEach(function (ifname) {
     });
 });
 
+
+initCSV();
+
 var socketServer = net.createServer(function (socket) {
 
 
@@ -86,6 +98,8 @@ var socketServer = net.createServer(function (socket) {
             try {
                 //process.stdout.write(message);
                 broadcast(message);
+                saveCSVLog(message);
+
                 //myWebsocket.send(message);
             } catch (exception) {
 
@@ -123,6 +137,34 @@ var socketServer = net.createServer(function (socket) {
     });
 });
 
+
+function initCSV(){
+    var csvHeader = "sep=;\nTyp; currentSpeed; currentLimit; nextLimit; distance; gaspedal; brakepedal\n";
+
+    fs.writeFile(filename, csvHeader, function (err) {
+        if (err) {
+            return console.log(err);
+
+        }
+
+    });
+console.log("CSV File: "+filename);
+}
+
+function saveCSVLog(message){
+
+
+
+
+
+
+    fs.appendFile(filename,message,function(err){
+        if(err)
+            console.error(err);
+    });
+
+
+}
 // Broadcast to others, excluding the sender
 function broadcast(message) {
 
@@ -188,6 +230,7 @@ server.on('request', app);
 server.listen(WsPort, function () {
     console.log('Websocket Server: ' + localIP + ":" + server.address().port)
 });
+
 
 
 module.exports = app;
